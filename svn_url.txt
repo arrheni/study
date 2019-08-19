@@ -1,0 +1,7 @@
+https://10.1.40.2/svn/P102_CBO/02Test/tag/NB-UW/            || nb-interface  | uw-interface
+https://10.1.40.2/svn/P108_CAP/02Test/tag/CLM_CAP/          || pa-interface  | clm-interface  | cap-interface 
+https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/css/       || css-interface 
+https://10.1.40.2/svn/P111_COB/01Dev/trunk/code/commonbiz/  || commonbiz-interface | commonbiz-impl  | commonbiz-web
+https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/qry/       || qry-interface       | qry-impl          |  qry-web
+https://10.1.40.2/svn/P102_CBS/02Test/trunk/code/prd/       || prd-interface       | prd-impl
+https://10.1.40.2/svn/P102_CBS/01Dev/trunk/code/fms/        || fms-biz
