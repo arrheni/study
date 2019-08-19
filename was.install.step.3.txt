@@ -1,0 +1,47 @@
+集群的图形化页面安装
+1.创建profile
+启动profile管理图形化工具，如下图所示。
+pwd
+cd /home/ap/was/AppServer/bin/ProfileManagement
+./pmt.sh
+ 
+ 
+选择profile类型，如果只创建单一受管节点，选择Application Server，如果创建单元，选择Cell，如下图所示。
+ 
+选择高级选项，点击下一步，如下图所示。
+ 
+可选应用部署，点击下一步，如下图所示。
+ 
+设置profile名称和安装位置，如下图所示。
+ 
+设置节点和主机名，如下图所示。
+ 
+设置安全选项，用户名/密码均为wasadmin如下图所示。
+ 
+设置安全认证1，选择默认，如下图所示。
+ 
+设置安全认证2，过期时间选择10，其他默认，如下图所示。
+ 
+指定相关端口，默认即可，如下图所示。
+ 
+系统服务定义，选择默认，如下图所示。
+ 
+Web服务器定义，选择默认，如下图所示。
+ 
+查看Profile参数汇总，点击创建，如下图所示。
+ 
+创建完成，点击finish，如下图所示。
+ 
+
+2.启动Dmgr
+-bash-4.1$ cd /home/ap/was/AppServer/profiles/Dmgr01
+-bash-4.1$ cd bin
+-bash-4.1$ sh startManager.sh
+
+
+Was8.5删除：
+第一种方式：
+/home/ap/was/InstallationManager/eclipse/tools 
+./imcl uninstallAll
+第二种方式：/var/ibm/InstallationManager/installRegistry.xml  注册表
+
