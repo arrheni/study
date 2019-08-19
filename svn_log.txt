@@ -1,0 +1,15 @@
+start_date='2019-8-8'
+end_date='2019-8-10'
+
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P102_CBO/02Test/tag/NB-UW/                >list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P108_CAP/02Test/tag/CLM_CAP/              >>list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/css/           >>list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P111_COB/01Dev/trunk/code/commonbiz/      >>list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/qry/           >>list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P102_CBS/02Test/trunk/code/prd/           >>list.txt
+svn log -v -r {$start_date}:{$end_date} https://10.1.40.2/svn/P102_CBS/01Dev/trunk/code/fms/            >>list.txt
+
+grep -e 02Test -e 01Dev list.txt| sort -k 2  | uniq  | grep -e nb-interface -e uw-interface -e pa-interface -e clm-interface -e css-interface -e cap-interface -e commonbiz-impl -e commonbiz-interface -e commonbiz-web -e qry-impl -e qry-interface -e prd-impl -e prd-interface -e fms-biz  -e qry-web > list_qry_${end_date}.txt
+
+
+
