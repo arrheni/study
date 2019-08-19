@@ -1,0 +1,246 @@
+Websphere8.5 静默安装
+安装产品名称：WebSphere Application Server
+版本：V8.5(64bit)
+修改主机名
+1.hostname 查看主机名
+hostname -i  查看本机器名对应的IP地址
+
+2.vim /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.1.95.47	qrytap0   填写IP地址和自定义的主机名
+
+echo "10.1.10.2  NDFVKNS" >> /etc/hosts
+
+
+3.vim  /etc/sysconfig/network
+NETWORKING=yes
+HOSTNAME=qrytap0   改成自定义的主机名
+NTPSERVERARGS=iburst
+
+
+4.reboot重启生效
+5.不重启的解决方法：
+查看getenforce的值是否为Permissive，如果为Enforcing，执行setenforce 0
+[root@COREPEap1 AppSrv01] getenforce    
+Permissive      
+[root@COREPEap1 AppSrv01] setenforce 0
+usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]
+关闭系统防火墙
+1. vi /etc/selinux/config    注意：管理员权限
+注释 SELINUX=enforcing
+增加一行 SELINUX=disabled
+sed -i 's#SELINUX=enforcing#SELINUX=disabled#g'  /etc/selinux/config
+cat /etc/selinux/config
+
+2. setenforce 0              //关闭selinux防火墙
+例子：[root@COREPEap1 AppSrv01] setenforce  0
+usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]
+1.	启动  0.警告不启动
+getenforce  //查看getenforce的值是否为Permissive
+
+3. /etc/init.d/iptables stop     //iptables服务停止
+  /etc/init.d/iptables status    //查看iptables服务的状态。
+4. chkconfig iptables  off    //永久性防火墙关闭
+
+磁盘分区挂载
+查看分区挂载情况  
+[root@localhost ~] df -Th
+查看服务器挂载的磁盘
+[root@localhost ~] fdisk -l
+对磁盘文件进行格式化
+[root@localhost ~] mkfs.ext4 /dev/sdb
+创建物理卷 /dev/sdb
+[root@Rulef1 ~] pvcreate /dev/sdb
+  Physical volume "/dev/sdb" successfully created
+创建卷组datavg  datavg
+[root@Rulef1 ~] vgcreate datavg /dev/sdb
+  Volume group "datavg" successfully created
+创建逻辑卷
+在/dev/datavg下创建逻辑卷homeap，大小为700G
+[root@Rulef1 ~] lvcreate -n homeap --size 700G datavg
+  Logical volume "homeap" created.
+创建文件系统
+[root@Rulef1 ~] mkfs -t ext4 /dev/mapper/datavg-homeap
+mke2fs 1.41.12 (17-May-2010)
+文件系统标签=
+操作系统:Linux
+块大小=4096 (log=2)
+分块大小=4096 (log=2)
+Stride=16 blocks, Stripe width=48 blocks
+45875200 inodes, 183500800 blocks
+9175040 blocks (5.00%) reserved for the super user
+第一个数据块=0
+Maximum filesystem blocks=4294967296
+5600 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+	4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968, 
+	102400000
+
+正在写入inode表: 完成                            
+Creating journal (32768 blocks): 完成
+Writing superblocks and filesystem accounting information: 完成
+
+This filesystem will be automatically checked every 23 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+
+配置/etc/fstab文件
+[root@localhost ~] cd /etc
+备份/etc/fstab文件
+[root@localhost ~] mkdir bak
+[root@localhost ~] cp fstab bak
+配置/etc/fstab文件
+[root@localhost ~] vi fstab
+为实现自动挂载文件系统，在文件末尾加入如下内容：
+/dev/mapper/datavg-homeap         /home/ap      ext4    defaults   1 1
+创建组
+[root@localhost ~] mkdir ap
+ cd /home
+挂载文件系统/home/ap
+ mount /home/ap
+
+配置本地YUM源
+进入目录/etc/yum.repos.d
+ cd /etc/yum.repos.d
+ 
+备份系统原有配置文件rhel-source.repo
+ mkdir bak
+ mv rhel-source.repo bak
+创建本地yum源文件
+ touch local.repo
+ 
+编辑local.repo文件
+ vi local.repo
+在配置文件中加入如下内容：
+[local]
+name=redhat6.4
+baseurl=file:///mnt/redhat6.4/Server
+enabled=1
+gpgcheck=0
+ 
+清除原有yum信息
+ yum clean all
+yum源检测
+ yum install make
+
+创建系统镜像文件挂载点
+ cd /mnt
+创建ISO文件挂载目录
+ mkdir redhat6.4
+
+挂载系统ISO文件
+mount -o loop rhel6u4.iso /mnt/redhat6.4
+
+图形界面配置
+1.	安装X11相关软件包
+yum install xorg*
+yum groupinstall "X Window System"
+yum groupinstall Desktop
+yum groupinstall "Desktop Platform"
+2.	打开177端口
+Step1： 
+编辑/etc/X11/xdm/Xaccess，将下面的行： 
+*  any host can get a login window 的第一个"#"号去掉 
+
+
+
+改为： 
+
+*                                       #any host can get a login window
+ Step2: 
+修改/etc/gdm/custom.conf找到下面的信息,没有添加：
+[security]
+AllowRemoteRoot =yes
+[xdmcp] 
+Enable=true 
+Port=177
+Step3: 
+修改/etc/inittab，将 
+id:3:initdefault: 
+修改为： 
+id:5:initdefault:
+Step4: 
+ chmod 444 /etc/X11/xdm/Xservers
+ chmod 755 /etc/X11/xdm/Xsetup_0 
+确保/etc/X11/xdm/Xservers的属性为444，/etc/X11/xdm/Xsetup_0的属性为755
+Step5: 
+vi /etc/X11/xdm/xdm-config
+在最后一行： DisplayManager.requestPort: 0 前面加！号注释掉此行。
+Step6:
+Reboot重启服务器
+Step7: 
+ xdm
+运行xdm脚本，这样使用xmanager等工具就可以连接Linux了。
+
+修改linux 最大文件限制数 ulimit
+1）修改当前交互终端的limit值 
+
+查询当前终端的文件句柄数： ulimit -n 回车，一般的系统默认的1024. 
+
+修改文件句柄数为32000，ulimit -n 32000.此时系统的文件句柄数为32000. 
+
+[root@COREPEap1 ~] ulimit -n 
+32000
+
+
+2）将ulimit 值添加到/etc/profile文件中（适用于有root权限登录的系统） 
+
+为了每次系统重新启动时，都可以获取更大的ulimit值，将ulimit 加入到/etc/profile 文件底部。 
+
+echo ulimit -n 32000 >>/etc/profile 
+
+source /etc/profile    加载修改后的profile 
+
+ulimit -n     显示32000，修改完毕！
+
+
+3) OK，好多朋友都以为大功告成了，可以突然发现自己再次登录进来的时候，ulimit的值还是1024，这是为什么呢？ 
+关键的原因是你登录的用户是什么身份，是不是root用户，由于服务器的root用户权限很大，一般是不能用来登录的，都是通过自己本人的登录权限进行登录，并通过sudo方式切换到root用户下进行工作。 用户登录的时候执行sh脚本的顺序： 
+/etc/profile.d/file 
+/etc/profile 
+/etc/bashrc 
+/mingjie/.bashrc 
+/mingjie/.bash_profile 
+
+由于ulimit -n的脚本命令加载在第二部分，用户登录时由于权限原因在第二步还不能完成ulimit的修改，所以ulimit的值还是系统默认的1024。 
+
+解决办法： 
+修改linux的软硬件限制文件/etc/security/limits.conf. 
+vi /etc/security/limits.conf
+在文件尾部添加如下代码： 
+* soft nofile 327680
+* hard nofile 327680
+
+
+4）通过uname -a查看内核版本，因为2.6版本的内核默认是在/etc/security/limits.d/90-nproc.conf里的配置会覆盖/etc/security/limits.conf的配置
+vi /etc/security/limits.d/90-nproc.conf
+#*          soft    nproc     1024   ##这行注释掉
+
+NTP服务时钟同步配置
+
+sed -i 's/server 0.rhel.pool.ntp.org/server 10.1.188.151 prefer/'  /etc/ntp.conf
+sed -i 's/server 1.rhel.pool.ntp.org/server 10.1.188.152/'  /etc/ntp.conf
+sed -i 's/server 2.rhel.pool.ntp.org/server 10.1.188.150/'  /etc/ntp.conf
+sed -i 's/-u ntp:ntp -p/-x -u ntp:ntp -p/' /etc/sysconfig/ntpd
+service ntpd stop
+service ntpd restart
+chkconfig ntpd on
+chkconfig iptables off
+date
+ntpq -p;date
+
+ntpstat
+检查
+1、	检查177端口状态
+netstat -an|grep 177
+ 
+2、	检查防火墙状态
+service iptables status
+ 
+3、	关闭防火墙
+service iptables stop（临时关闭）
+ 
+chkconfig iptables off (永久关闭)
