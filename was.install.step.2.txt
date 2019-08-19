@@ -1,0 +1,155 @@
+Websphere8.5 静默安装
+创建组和用户
+创建was组，并指定ID为600
+ groupadd -g 600 was
+创建was用户
+ useradd -d /home/ap/was -g was -u 601 was
+设置was密码
+passwd was
+New password:
+Retype new password:
+
+准备介质：
+上传介质至/home/ap/was/soft并解压
+cd /home/ap/was/
+mkdir soft
+cd soft
+mkdir im was-fp was-nd
+
+
+解压IM
+unzip /home/ap/was/soft/im/InstalMgr1.5.2_LNX_X86_WAS_8.5.zip
+解压安装包
+unzip /home/ap/was/soft/was-nd/WAS_ND_V8.5_1_OF_3.zip
+unzip /home/ap/was/soft/was-nd/WAS_ND_V8.5_2_OF_3.zip
+unzip /home/ap/was/soft/was-nd/WAS_ND_V8.5_3_OF_3.zip
+解压升级包
+unzip /home/ap/was/soft/was-fp/8.5.0-WS-WAS-FP0000001-part1.zip
+unzip /home/ap/was/soft/was-fp/8.5.0-WS-WAS-FP0000001-part2.zip
+在安装IM前，请先执行以下步骤：
+           
+安装IM
+（installc以管理员的身份安装、安装到/home/ap/was/InstallationManager/eclipse目录下、acceptLicense接受许可协议）
+ cd  /home/ap/was/soft/im
+ ./installc -installationDirectory /home/ap/was/InstallationManager/eclipse  -acceptLicense
+安装基础软件包
+ cd  /home/ap/was/InstallationManager/eclipse/tools/
+获取软件包标识
+./imcl listAvailablePackages -repositories /home/ap/was/soft/was-nd/
+com.ibm.websphere.ND.v85_8.5.0.20120501_1108
+安装
+（repositories指定要使用的存储库、installationDirectory安装目录、sharedResourcesDirectory共享资源目录、properties 软件包安装所需的属性、acceptLicense接受许可协议、showVerboseProgress显示详细进度、viewLog显示日志文件列表） 
+ ./imcl install com.ibm.websphere.ND.v85_8.5.0.20120501_1108 -repositories  /home/ap/was/soft/was-nd/repository.config  -installationDirectory /home/ap/was/AppServer -sharedResourcesDirectory /home/ap/was/IMShared -properties cic.selector.nl=zh -acceptLicense  -showVerboseProgress viewLog
+安装补丁
+ pwd
+/home/ap/was/InstallationManager/eclipse/tools
+获取软件包标识
+ ./imcl listAvailablePackages -repositories /home/ap/was/soft/was-fp
+com.ibm.websphere.BASE.v85_8.5.1.20121017_1724
+com.ibm.websphere.BASETRIAL.v85_8.5.1.20121017_1724
+com.ibm.websphere.DEVELOPERS.v85_8.5.1.20121017_1724
+com.ibm.websphere.DEVELOPERSILAN.v85_8.5.1.20121017_1724
+com.ibm.websphere.EXPRESS.v85_8.5.1.20121017_1724
+com.ibm.websphere.EXPRESSTRIAL.v85_8.5.1.20121017_1724
+com.ibm.websphere.ND.v85_8.5.1.20121017_1724
+com.ibm.websphere.NDDMZ.v85_8.5.1.20121017_1724
+com.ibm.websphere.NDDMZTRIAL.v85_8.5.1.20121017_1724
+com.ibm.websphere.NDTRIAL.v85_8.5.1.20121017_1724
+补丁安装方法与安装基础软件包一样
+./imcl install com.ibm.websphere.ND.v85_8.5.1.20121017_1724 -repositories /home/ap/was/soft/was-fp/repository.config -installationDirectory /home/ap/was/AppServer -sharedResourcesDirectory /home/ap/was/IMShared -properties cic.selector.nl=zh -acceptLicense -showVerboseProgress viewLog
+查看是否安装成功
+cd /home/ap/was/AppServer/bin
+ sh versionInfo.sh
+WVER0010I: Copyright (c) IBM Corporation 2002, 2012; All rights reserved.
+WVER0012I: VersionInfo reporter V1.15.1.48，日期：2/8/12
+--------------------------------------------------------------------------------
+IBM WebSphere 产品安装状态报告
+--------------------------------------------------------------------------------
+日期和时间 2015年10月21日 下午06时38分50秒 时的报告
+安装
+--------------------------------------------------------------------------------
+产品目录                     /home/ap/was/AppServer
+版本目录                     /home/ap/was/AppServer/properties/version
+DTD 目录                   /home/ap/was/AppServer/properties/version/dtd
+日志目录                     /var/ibm/InstallationManager/logs
+产品列表
+--------------------------------------------------------------------------------
+ND                       已安装
+已安装产品
+--------------------------------------------------------------------------------
+名称         IBM WebSphere Application Server Network Deployment
+版本         8.5.0.1
+标识         ND
+构建级别       cf011242.02
+构建日期       10/17/12
+软件包        com.ibm.websphere.ND.v85_8.5.1.20121017_1724
+体系结构       x86-64 (64 bit)
+已安装功能部件    针对 Java 的 IBM 64 位 WebSphere SDK
+           WebSphere Application Server Full Profile
+           用于 EJB 3.0 之前的模块的 EJBDeploy 工具
+           可嵌入式 EJB 容器
+           独立瘦客户机和资源适配器
+可选语言       简体中文
+--------------------------------------------------------------------------------
+结束安装状态报告
+-------------------------------------------------------------------------------
+修改/home/ap/was目录属主为was
+ chown -R was:was /home/ap/was
+
+查看JDK版本
+bash-4.1$ java -version
+java version "1.7.0_09-icedtea"
+OpenJDK Runtime Environment (rhel-2.3.4.1.el6_3-x86_64)
+OpenJDK 64-Bit Server VM (build 23.2-b09, mixed mode)
+bash-4.1$  java -fullversion
+java full version "1.7.0_09-icedtea-mockbuild_2013_01_15_04_12-b00"
+
+升级was8.5的JDK版本到1.7
+
+下载websphere   jdk1.7的补丁，8.5.0.1  只能安装7.0的jdk，8.5.5支持7.1的jdk。
+was.repo.8550.java7_part1.zip
+was.repo.8550.java7_part2.zip
+was.repo.8550.java7_part3.zip
+1．	解压
+cd /home/ap/was/soft/jdk1.7
+unzip was.repo.8550.java7_part1.zip
+unzip was.repo.8550.java7_part2.zip
+unzip was.repo.8550.java7_part3.zip
+2．	借助IM工具进行安装
+ cd  /home/ap/was/InstallationManager/eclipse/tools/
+获取jdk的标识
+./imcl listAvailablePackages -repositories /home/ap/was/soft/jdk1.7/
+com.ibm.websphere.liberty.IBMJAVA.v70_7.0.4001.20130510_2103
+安装
+./imcl install com.ibm.websphere.IBMJAVA.v70_7.0.4001.20130510_2103  -repositories /home/ap/was/soft/jdk1.7/repository.config -installationDirectory /home/ap/was/AppServer  -sharedResourcesDirectory /home/ap/was/IMShared  -properties cic.selector.nl=zh  -acceptLicense  -showVerboseProgress  viewLog
+3.   激活JDK
+安装完java  jdk7.0以后，在您配置的profile对应的服务器中，缺省并没有激活及使用jdk7.0版本，我们需要进行额外的配置，激活的方式有两种。
+1，	通过命令行的方式，使用sh managesdk.sh –listAvailable罗列你当前系统中已经安装的所有sdk的名称。
+[root@CMCdocap1 bin] sh managesdk.sh -listAvailable
+CWSDK1003I: 可用的 SDK：
+CWSDK1005I: SDK 名称：1.7_64
+CWSDK1005I: SDK 名称：1.6_64
+CWSDK1001I: 已成功执行请求的 managesdk 任务。
+2，	激活jdk
+[root@CMCdocap1 bin] sh managesdk.sh -enableProfile -profileName AppSrv01  -sdkname 1.7_64
+CWSDK1017I: 现在，启用了概要文件 AppSrv02 以使用 SDK 1.7_64。
+CWSDK1001I: 已成功执行请求的 managesdk 任务。
+-sdkname <parameter_value>：为此 Websphere 安装启用的 SDK 名称。
+单节点的创建
+1.创建概要文件
+$ cd /home/ap/was/AppServer/bin
+$ sh manageprofiles.sh -create  -profileName AppSrv01
+2.启动环境
+$ cd /home/ap/was/AppServer/profiles/AppSrv01/bin
+$ sh startServer.sh server1
+
+访问地址：https://10.1.94.158:9043/ibm/console/unsecureLogon.jsp
+
+单节点的删除
+cd /home/ap/was/AppServer/bin
+1.查看当前的节点
+sh manageprofiles.sh -listProfiles
+
+2.删除节点
+sh manageprofiles.sh  -delete -profileName AppSrv02
+
