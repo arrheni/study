@@ -1,4 +1,8 @@
 # bat_to_bash
+
+backup bat or bash which i used
+
+
 upload file form windows to linux or run a linux bash shell from windows bat 
 
 bat  upload_restart_websphere.bat  need download suit https://www.putty.org/  and   add scp.exe and putty.exe etc. to PATH
