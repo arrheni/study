@@ -13,8 +13,8 @@ remote_path='was@10.1.95.47:/home/ap/was/AppServer/profiles/AppSrv03/installedAp
 #########################################################################################################
 from_path="WEB-INF/lib/"
 to_class_path="WEB-INF/classes/"
-to_META_path="WEB-INF/classes/META-INF/"
-to_webapp_path=""
+
+META_resources_path="WEB-INF/classes/META-INF/resources/"
 
 function clean_path()
 {
@@ -47,6 +47,9 @@ cat svn_jar.txt|while read line
 do
 	unzip_jar=`ls ${mother_path}${from_path}${line}*`
 	unzip -qo  ${unzip_jar}  -d ${mother_path}${to_class_path}
+	if [ -d ${mother_path}${META_resources_path} ] then;
+		mv ${mother_path}${META_resources_path}* ${mother_path}
+	fi
 	mv ${unzip_jar}  ${text_path}
 done
 }
@@ -56,10 +59,13 @@ done
 webapp="src/main/webapp/"
 resources="src/main/resources/"
 java="src/main/java/"
+resources_M_r="src/main/resources/META-INF/resources"
+
 function get_and_check_cp_list()
 {
-grep "$webapp" list_qry_$d.txt | awk -F "$webapp" '{print $2}' | tee  cp_$d.txt
-grep "$resources" list_qry_$d.txt | awk -F "$resources" '{print "WEB-INF/classes/" $2}' | tee -a cp_$d.txt
+grep "$webapp" list_qry_$d.txt | awk -F "$webapp" '{print $2}'  >  cp_$d.txt 
+grep "$resources_M_r" list_qry_$d.txt | awk -F "$resources_M_r" '{print $2}' >> cp_$d.txt
+grep "$resources" list_qry_$d.txt | grep -v "$resources_M_r" | awk -F "$resources" '{print "WEB-INF/classes/" $2}' >> cp_$d.txt 
 grep "$java" list_qry_$d.txt | awk -F "$java" '{print "WEB-INF/classes/" $2}' > cp_java_$d.txt
 sed "s/\.java/\.class/g" cp_java_$d.txt >> cp_$d.txt
 
