@@ -3,10 +3,16 @@
 d=$(date +%F)
 #d="2019-08-14"
 
-mother_path="/home/fb/jenkins/workspace/Deploy_Cluster_AP2_QRY_97.47_AppSrv03/qry-web/target/qry-web/"
-base_path="/home/fb/jenkins/workspace/Deploy_Cluster_AP2_QRY_97.47_AppSrv03/"
-text_path="${base_path}qry/$d/"
-rsync_path="${text_path}qry-web/"
+#mother_path="/home/fb/jenkins/workspace/Deploy_Cluster_AP2_QRY_97.47_AppSrv03/qry-web/target/qry-web/"
+#base_path="/home/fb/jenkins/workspace/Deploy_Cluster_AP2_QRY_97.47_AppSrv03/"
+#text_path="${base_path}qry/$d/"
+
+base_path=`pwd`
+mother_path="$base_path/local-webapp/target/local-webapp-0.5.5.3/"
+war_file="local-webapp-0.5.5.3.war"
+text_path="${base_path}/unzip_jar/$d/"
+
+rsync_path="${text_path}/qry-web/"
 #war_path="${base_path}/qry-web/target/"
 remote_path='was@10.1.95.47:/home/ap/was/AppServer/profiles/AppSrv03/installedApps/qrytap0Node03Cell/qry-web.ear/qry-web.war/'
 
@@ -47,11 +53,18 @@ cat svn_jar.txt|while read line
 do
 	unzip_jar=`ls ${mother_path}${from_path}${line}*`
 	unzip -qo  ${unzip_jar}  -d ${mother_path}${to_class_path}
-	if [ -d ${mother_path}${META_resources_path} ] then;
-		mv ${mother_path}${META_resources_path}* ${mother_path}
-	fi
+#	if [ -d ${mother_path}${META_resources_path} ] then;
+#		mv ${mother_path}${META_resources_path}* ${mother_path}
+#	fi
 	mv ${unzip_jar}  ${text_path}
 done
+
+cd ${mother_path}${META_resources_path}; 
+find . -type d -exec mkdir -p ${mother_path}/\{} \; 
+find . -type f -exec mv \{} ${mother_path}/\{} \; 
+find . -type d -empty -delete
+cd $base_path
+
 }
 
 ############################## get file copy list
@@ -94,8 +107,8 @@ cd $rsync_path
 zip -qr qry-web_increment_$d.zip  ./ 
 mv qry-web_increment_$d.zip $text_path
 cd $mother_path
-jar -cfM0 qry-web.war ./
-mv qry-web.war $text_path
+jar -cfM0 $war_file ./
+mv $war_file $text_path
 }
 
 ############################## deploy zip or war
