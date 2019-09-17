@@ -59,11 +59,33 @@ do
 	mv ${unzip_jar}  ${text_path}
 done
 
-cd ${mother_path}${META_resources_path}; 
-find . -type d -exec mkdir -p ${mother_path}/\{} \; 
-find . -type f -exec mv \{} ${mother_path}/\{} \; 
-find . -type d -empty -delete
-cd $base_path
+
+#cd ${mother_path}${META_resources_path}; 
+#find . -type d -exec mkdir -p ${mother_path}/\{} \; 
+#find . -type f -exec mv \{} ${mother_path}/\{} \; 
+#find . -type d -empty -delete
+#cd $base_path
+
+rd=(pa cs clm cap common mobcss images)
+for resources_dir in ${rd[@]}
+do
+        if      [ -d ${mother_path}${resources_dir} ]
+        then
+                #mv  ${mother_path}${META_resources_path}${resources_dir}/*  ${mother_path}${resources_dir}
+                cp  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
+                rm -r  ${mother_path}${META_resources_path}${resources_dir}
+
+        else
+                mkdir ${mother_path}${resources_dir}
+                #mv  ${mother_path}${META_resources_path}${resources_dir}/*  ${mother_path}${resources_dir}
+                cp  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
+                rm -r  ${mother_path}${META_resources_path}${resources_dir}
+
+
+        fi
+done
+
+
 
 }
 
