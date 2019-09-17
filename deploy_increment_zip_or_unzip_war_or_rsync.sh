@@ -72,13 +72,13 @@ do
         if      [ -d ${mother_path}${resources_dir} ]
         then
                 #mv  ${mother_path}${META_resources_path}${resources_dir}/*  ${mother_path}${resources_dir}
-                cp  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
+                cp -rl  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
                 rm -r  ${mother_path}${META_resources_path}${resources_dir}
 
         else
                 mkdir ${mother_path}${resources_dir}
                 #mv  ${mother_path}${META_resources_path}${resources_dir}/*  ${mother_path}${resources_dir}
-                cp  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
+                cp -rl  ${mother_path}${META_resources_path}${resources_dir}  ${mother_path}${resources_dir}
                 rm -r  ${mother_path}${META_resources_path}${resources_dir}
 
 
