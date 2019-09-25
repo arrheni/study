@@ -55,7 +55,7 @@ function zip_war_file()
 	jar -cfM0 $war_file  ./
 	mv $war_file $backup_path
 	cd $base_path
-	find Backup/ -maxdepth 1 -mindepth 1 -type d -mtime 7 -exec rm -rfv "{}" \
+	find Backup/ -maxdepth 1 -mindepth 1 -type d -mtime 7 -exec rm -rfv "{}" \;
 }
 
 clean_path
