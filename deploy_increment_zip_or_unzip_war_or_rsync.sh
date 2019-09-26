@@ -1,46 +1,67 @@
 #!/bin/bash
 
 d=$(date +%F)
-#d="2019-08-14"
+#d="2019-08-15"
+base_path="${WORKSPACE}"
 
-base_path=`pwd`
-mother_path="$base_path/qry-web/target/qry-web/"
+#jenkins 编译完成之后的应用目录
+mother_path="$base_path/local-webapp/target/local-webapp-0.5.5.3/"
 
-war_file="qry-web.war"
-list_file="list_qry_$d.txt"
-jar_list="jar_qry.txt"
-increment_zip="qry-web_increment_$d.zip"
+#编译生成的war包名称
+war_file="local-webapp-0.5.5.3.war"
 
+#需提供的增量文件列表，格式有要求(java xml js jsp)
+list_file="list_pa_$d.txt"
+
+#生成的增量zip包
+increment_zip="increment_pa_$d.zip"
+
+#需要解压缩的jar包前缀
+jar_list="nb-interface uw-interface pa-interface pa-impl pa-web clm-interface clm-impl clm-web cap-interface cap-impl cap-web css-interface prd-interface prd-impl commonbiz-interface commonbiz-impl commonbiz-web fms-biz"
+
+#需要从resources移除的目录
+META_resources="pa cs clm cap common mobcss images"
+
+######################################以上变量名称需要针对不同环境修改#############################################
 backup_path="${base_path}/Backup/$d/"
 rsync_path="${backup_path}Rsync/"
+
+#生成的增量列表文件(class xml js jsp)
 update_list="update_list_$d.txt"
 java_list="java_list_$d.txt"
-#META_resources=(pa cs clm cap common mobcss images)
-META_resources=(common)
-
-
-
-#########################################################################################################
 from_path="WEB-INF/lib/"
 to_class_path="WEB-INF/classes/"
 META_resources_path="WEB-INF/classes/META-INF/resources/"
-
 webapp="src/main/webapp/"
 resources="src/main/resources/"
 java="src/main/java/"
 
-
 function clean_path()
 {
-	if [ -d $backup_path ] 
-	then
-		rm -rf ${backup_path}*
-	else
-		mkdir -p $backup_path
-	fi
+        if [ -d $backup_path ] 
+	    then
+		    rm -rf ${backup_path}*
+	    else
+		    mkdir -p $backup_path
+	    fi
 }
 
-############################## check svn delete files. need list_qry_$d.txt
+function unzip_jar()
+{
+	for jar in ${jar_list}
+	do
+		unzip_jar=`ls ${mother_path}${from_path}${jar}*`
+		unzip -qo  ${unzip_jar}  -d ${mother_path}${to_class_path}
+		mv ${unzip_jar}  ${backup_path}
+	done
+	
+	for mr in $META_resources
+	do
+	        cp -r ${mother_path}${META_resources_path}${mr}  ${mother_path}
+	        rm -r ${mother_path}${META_resources_path}${mr}
+	done
+}
+
 function check_del_file()
 {
 	grep "D       " $list_file | tee ibm-partialapp-delete
@@ -60,31 +81,13 @@ function check_del_file()
 		awk -F "[.]" '{system("ls " $1 "*.class")}'  ${base_path}/$java_list  >>${base_path}/ibm-partialapp-delete.props
 		
 		cd $base_path
+		for mr in $META_resources
+	        do
+	                sed -i 's#${META_resources_path}${mr}#${mr}#g' $ibm-partialapp-delete.props
+	        done
 		cp ibm-partialapp-delete.props ${mother_path}META-INF 
 	fi
 }
-
-############################## unzip war & jar.   need svn_jar.txt
-function unzip_jar()
-{
-	#unzip -qo ${war_path}qry-web.war -d ${war_path}qry-web
-	cat ${jar_list}|while read line
-	do
-		unzip_jar=`ls ${mother_path}${from_path}${line}*`
-		unzip -qo  ${unzip_jar}  -d ${mother_path}${to_class_path}
-		mv ${unzip_jar}  ${backup_path}
-	done
-	
-	for mr in ${META_resources[@]}
-	do
-	        cp -r ${mother_path}${META_resources_path}${mr}  ${mother_path}
-	        rm -r ${mother_path}${META_resources_path}${mr}
-	
-	done
-
-}
-
-############################## get file copy list
 
 function get_and_check_update_list()
 {
@@ -95,7 +98,13 @@ function get_and_check_update_list()
 	cd $mother_path
 	awk -F "[.]" '{system("ls " $1 "*.class")}'  ${base_path}/$java_list  >>${base_path}/$update_list
 	
-	cd $base_path
+        cd $base_path
+        for mr in $META_resources
+	do
+	        sed -i 's#${META_resources_path}${mr}#${mr}#g' $update_list
+	done
+
+	
 	if [ -s ibm-partialapp-delete.props ] ; then 
 		echo "META-INF/ibm-partialapp-delete.props" >> $update_list
 	fi
@@ -105,45 +114,69 @@ function get_and_check_update_list()
 	grep '\$' $update_list 
 }
 
-############################## rsync xml js jsp class to rsync_path
 function rsync_file()
 {
 	mkdir -p $rsync_path
-	rsync --files-from=$update_list $mother_path $rsync_path 
+
+	rsync --files-from=$update_list $mother_path $rsync_path${war_file}
 	
 	mv ${list_file}* ibm-partialapp-delete.props $java_list $update_list $backup_path
+        
 }
 
-############################## zip increment file to .zip and jar .war 
-function zip_and_jar_file()
+function zip_zip_file()
 {
 	cd $rsync_path
 	[ -f $increment_zip ] && rm -v $increment_zip
 	zip -qr $increment_zip  ./ 
 	mv $increment_zip $backup_path
-	
-	cd $mother_path
-	jar -cfM0 $war_file ./
-	mv $war_file $backup_path
 
-	cd $base_path
 }
 
-############################## deploy zip or war
-function deploy()
+function zip_war_file()
 {
-	cd $backup_path
-
+        cd $mother_path
+	jar -cfM0 $war_file  ./
+	mv $war_file $backup_path
+	cd $base_path
+        find Backup/ -maxdepth 1 -mindepth 1 -type d -mtime 7 -exec rm -rf "{}" \;
 }
 
-if  [  -r $list_file -a -r $jar_list ] ; then
-	clean_path
-	unzip_jar
+clean_path
+unzip_jar
+zip_war_file
 
+if  [  -r $list_file  ] ; then
 	check_del_file
 	get_and_check_update_list
 	rsync_file
-	zip_and_jar_file
+	zip_zip_file
 else
-  	echo "NEED file  $list_file  and  $jar_list  ERR--ERR--ERR--ERR--ERR--ERR--ERR--ERR--ERR--ERR--ERR--"
+  	echo "NEED  $list_file to get update zip file--------------------ERR--ERR--ERR-------------------------------"
+fi
+
+##########################################################################################################
+
+
+earfile=`ls ${WORKSPACE}/local-webapp/target/*.war|xargs basename`
+
+node=`echo ${NODE_LABELS}`
+
+if [ $node == "master" ];then
+
+/home/ap/was/AppServer/profiles/AppSrv01/bin/wsadmin.sh -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' app  {-operation update -contents '${WORKSPACE}'/local-webapp/target/'$earfile' -contextroot '$contextroot' -usedefaultbindings -MapResRefToEJB{{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpJndiDataSource javax.sql.DataSource jdbc/GLOBALJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpDataSource javax.sql.DataSource jdbc/PAJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpCommonDataSource javax.sql.DataSource jdbc/UdmpCommonDataSource}}}'
+
+elif [ $node == "98.9" ];then
+
+#拆包全量部署
+time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' app  {-operation update -contents '${backup_path}${war_file}' -contextroot '$contextroot' -usedefaultbindings -MapResRefToEJB{{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpJndiDataSource javax.sql.DataSource jdbc/GLOBALJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpDataSource javax.sql.DataSource jdbc/PAJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpCommonDataSource javax.sql.DataSource jdbc/UdmpCommonDataSource}}}'
+whoami
+
+#拆包增量部署
+
+#time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh  -host $host -port 8882  -user $username -password $password -c '$AdminApp update qry-web partialapp {-contents  '${backup_path}${increment_zip}'}'
+whoami
+
+#不拆包全量部署
+#/home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' app  {-operation update -contents '${WORKSPACE}'/local-webapp/target/'$earfile' -contextroot '$contextroot' -usedefaultbindings -MapResRefToEJB{{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpJndiDataSource javax.sql.DataSource jdbc/GLOBALJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpDataSource javax.sql.DataSource jdbc/PAJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpCommonDataSource javax.sql.DataSource jdbc/UdmpCommonDataSource}}}'
 fi
