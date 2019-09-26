@@ -55,7 +55,7 @@ function unzip_jar()
 		mv ${unzip_jar}  ${backup_path}
 	done
 	
-	for mr in $META_resources
+	for mr in ${META_resources}
 	do
 	        cp -r ${mother_path}${META_resources_path}${mr}  ${mother_path}
 	        rm -r ${mother_path}${META_resources_path}${mr}
@@ -75,18 +75,18 @@ function check_del_file()
 		grep "$webapp" ibm-partialapp-delete | awk -F "$webapp" '{print $2}' > ibm-partialapp-delete.props
 		grep "$resources" ibm-partialapp-delete | awk -F "$resources" '{print "WEB-INF/classes/" $2}' >> ibm-partialapp-delete.props
 		grep "$java" ibm-partialapp-delete | awk -F "$java" '{print "WEB-INF/classes/" $2}' > $java_list
-		rm ibm-partialapp-delete	
-
+		
 		cd $mother_path
 		awk -F "[.]" '{system("ls " $1 "*.class")}'  ${base_path}/$java_list  >>${base_path}/ibm-partialapp-delete.props
 		
 		cd $base_path
-		for mr in $META_resources
+		for mr in ${META_resources}
 	        do
-	                sed -i 's#${META_resources_path}${mr}#${mr}#g' $ibm-partialapp-delete.props
+	                sed -i "s#${META_resources_path}${mr}#${mr}#g" ibm-partialapp-delete.props
 	        done
 		cp ibm-partialapp-delete.props ${mother_path}META-INF 
 	fi
+        rm ibm-partialapp-delete
 }
 
 function get_and_check_update_list()
@@ -101,7 +101,7 @@ function get_and_check_update_list()
         cd $base_path
         for mr in $META_resources
 	do
-	        sed -i 's#${META_resources_path}${mr}#${mr}#g' $update_list
+	        sed -i "s#${META_resources_path}${mr}#${mr}#g" $update_list
 	done
 
 	
@@ -120,7 +120,7 @@ function rsync_file()
 
 	rsync --files-from=$update_list $mother_path $rsync_path${war_file}
 	
-	mv ${list_file}* ibm-partialapp-delete.props $java_list $update_list $backup_path
+	mv ${list_file}*  $java_list $update_list $backup_path
         
 }
 
@@ -169,12 +169,12 @@ if [ $node == "master" ];then
 elif [ $node == "98.9" ];then
 
 #拆包全量部署
-time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' app  {-operation update -contents '${backup_path}${war_file}' -contextroot '$contextroot' -usedefaultbindings -MapResRefToEJB{{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpJndiDataSource javax.sql.DataSource jdbc/GLOBALJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpDataSource javax.sql.DataSource jdbc/PAJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpCommonDataSource javax.sql.DataSource jdbc/UdmpCommonDataSource}}}'
+#time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' app  {-operation update -contents '${backup_path}${war_file}' -contextroot '$contextroot' -usedefaultbindings -MapResRefToEJB{{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpJndiDataSource javax.sql.DataSource jdbc/GLOBALJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpDataSource javax.sql.DataSource jdbc/PAJndiDataSource}{'$earfile' .* '$earfile',WEB-INF/web.xml jdbc/UdmpCommonDataSource javax.sql.DataSource jdbc/UdmpCommonDataSource}}}'
 whoami
 
 #拆包增量部署
 
-#time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh  -host $host -port 8882  -user $username -password $password -c '$AdminApp update qry-web partialapp {-contents  '${backup_path}${increment_zip}'}'
+#time /home/fb/AppServer/profiles/AppSrv01/bin/wsadmin.sh  -host $host -port 8882  -user $username -password $password -c '$AdminApp update '$appname' partialapp {-contents  '${backup_path}${increment_zip}'}'
 whoami
 
 #不拆包全量部署
