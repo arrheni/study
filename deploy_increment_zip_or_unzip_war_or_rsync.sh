@@ -126,14 +126,14 @@ function zip_war_file() {
 	jar -cfM0 $war_file ./
 	mv $war_file $backup_path
 	cd $base_path
-	find Backup/ -maxdepth 1 -mindepth 1 -type d -mtime 7 -exec rm -rf "{}" \;
+	find Backup/ -maxdepth 1 -mindepth 1 -type d -mtime +7 -exec rm -rf "{}" \;
 }
 
 clean_path
 unzip_jar
 zip_war_file
 
-if [ -r $list_file ]; then
+if [ -s $list_file ]; then
 	check_del_file
 	get_and_check_update_list
 	rsync_file
