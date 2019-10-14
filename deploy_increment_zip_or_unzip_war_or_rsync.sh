@@ -270,7 +270,7 @@ function get_add_or_update_file_list() {
 
 	cd ${mother_path}
 	
-	awk -F "[.]" '{system("ls " $1 "*.class")}' ${base_path}/${java_list} >>${base_path}/${update_file_list}
+	awk -F "[.]" '{system("ls " $1 ".class")}{system("ls " $1 "\\$*.class")}' ${base_path}/${java_list} >>${base_path}/${update_file_list}
 
 	cd ${base_path}
 	
