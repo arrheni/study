@@ -67,7 +67,7 @@ EOF
 		META_resources="nb  uw  common"
 		
 		cat >svn_url <<EOF
-https://10.1.40.2/svn/P102_CBO/02Test/tag/NB-UW/            || nb-interface  | nb-impl        |nb-web         | uw-interface    |uw-impl    | uw-web
+https://10.1.40.2/svn/P102_CBO/02Test/tag/NB-UW/            || nb-interface  | nb-impl        |nb-web         | uw-interface    |uw-impl    | uw-web   |local-webapp 
 https://10.1.40.2/svn/P108_CAP/02Test/tag/CLM_CAP/          || pa-interface  | clm-interface  | cap-interface 
 https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/css/       || css-interface 
 https://10.1.40.2/svn/P111_COB/01Dev/trunk/code/commonbiz/  || commonbiz-interface | commonbiz-impl  | commonbiz-web
@@ -92,7 +92,7 @@ EOF
 		
 		cat >svn_url <<EOF
 https://10.1.40.2/svn/P102_CBO/02Test/tag/NB-UW/            || nb-interface  | uw-interface
-https://10.1.40.2/svn/P108_CAP/02Test/tag/CLM_CAP/          || pa-interface  |pa-impl |pa-web | clm-interface| clm-impl |clm-web | cap-interface |cap-impl |cap-web
+https://10.1.40.2/svn/P108_CAP/02Test/tag/CLM_CAP/          || pa-interface  |pa-impl |pa-web | clm-interface| clm-impl |clm-web | cap-interface |cap-impl |cap-web | local-webapp
 https://10.1.40.2/svn/P105_CSS/02Test/trunk/code/css/       || css-interface 
 https://10.1.40.2/svn/P111_COB/01Dev/trunk/code/commonbiz/  || commonbiz-interface | commonbiz-impl  | commonbiz-web
 https://10.1.40.2/svn/P102_CBS/02Test/trunk/code/prd/       || prd-interface       | prd-impl
