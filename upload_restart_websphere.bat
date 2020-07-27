@@ -80,7 +80,7 @@ IF "%SUBSYSTEM%" == "jrqd"  (
 SET  SERVER_HOST=10.1.160.5
 SET  APP=AppSrv01
 SET  JAR_FILE=CloudKVM01Node01Cell/local-webapp-0_5_4_war.ear/local-webapp-0.5.4.war
-SET  pass=~~~~~~
+SET  pass=otXc^^^&A37.
 )
 
 IF "%SERVER_HOST%" == ""  pause&goto :eof
