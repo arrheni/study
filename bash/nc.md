@@ -15,6 +15,53 @@ netcat 的另一个升级功能的命令是 socat
 | debian 10 11 | netcat | http://netcat.sourceforge.net/ | nc -zv ucpubgid.com 80                            |
 
 
+　　先说明一下，[nc](http://www.tutorialspoint.com/unix_commands/nc.htm) 与 netcat 是同一个东西，[ncat](https://nmap.org/ncat/) 是 [nmap](https://nmap.org/) 套件的一部分，ncat 与 [socat](http://www.dest-unreach.org/socat/) 都号称自己是 nc 的增强版。
+
+　　scocat 端口释放很慢。
+
+【 **回显** 】
+
+ **1、** TCP 回显
+
+1.1、仅仅回显，不打印。
+
+| 12 | `ncat -c ``cat` `-k -l 6666``ncat -e ``/bin/cat` `-k -l 6666` |
+| -- | --------------------------------------------------------------------------- |
+
+1.2、回显并打印。
+
+| 1 | `socat -d -d -``v` `tcp-l:6666,fork ``exec``:``'/bin/cat'` `#两个-d是为了显示连接状况` |
+| - | ------------------------------------------------------------------------------------------------ |
+
+ **2、** UDP 回显。
+
+| 12 | `ncat -c ``cat` `-k -u -l 6666``ncat -e ``/bin/cat` `-k -u -l 6666` |
+| -- | ----------------------------------------------------------------------------------- |
+
+ **3、** TCP 端口转发。（[ncat端口转发](http://www.jianshu.com/p/9db274484811)）
+
+| 12 | `# 监听本机 7777 端口，将数据转发到 192.168.7.8 的 8888 端口``ncat --sh-``exec` `"ncat 192.168.7.8 8888"` `-l 7777 --keep-``open` |
+| -- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+【nmap 常用扫描命令】
+
+| 12345678 | `#快速扫描一台主机的著名端口``nmap -F -n -sTU -``v` `192.168.0.xx` `#快速扫描多台主机的著名端口``nmap -F -n -sTU -``v` `192.168.0.130-168` `#扫描20-200端的端口``nmap -n -sTU -``v` `-p 20-200 192.168.0.xx` |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+【扫描 dhcp 服务器】
+
+[![wKiom1mShtaQdDCsAAATUW6j4wc116.png](https://s4.51cto.com/wyfs02/M01/9E/90/wKiom1mShtaQdDCsAAATUW6j4wc116.png "dhcp.png")](https://s4.51cto.com/wyfs02/M01/9E/90/wKiom1mShtaQdDCsAAATUW6j4wc116.png)
+
+ **1、** [DHCP协议详解](http://blog.chinaunix.net/uid-29158166-id-4575490.html)
+
+ **2、** [Nmap扫描教程之网络基础服务DHCP服务类](http://blog.csdn.net/daxueba/article/details/46635379)
+
+| 12345 | `# 广播（broadcast-dhcp-discover）``nmap --script broadcast-dhcp-discover` `# 指定主机。（dhcp-discover）``nmap -sU -p 67 --script=dhcp-discover 192.168.0.xx` |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+相关阅读：[端口扫描之王——nmap入门精讲（一）](http://www.cnblogs.com/st-leslie/p/5115280.html?spm=a2c6h.12873639.article-detail.12.2873196fpe9sUP)
+
+
 ss command is a tool that is used for displaying network socket related information on a Linux system.
 
 Nmap is short for Network Mapper. It is an open-source Linux cmd-line tool that is used to scan IPs & ports in a nw & to detect installed apps. Nmap allows nw admins to find which devices r running on their nw, discover open ports & services, and detect vulnerabilities.
