@@ -1,0 +1,309 @@
+{
+  "log": {
+    "loglevel": "info"
+  },
+  "api": {
+    "services": [
+      "HandlerService",
+      "LoggerService",
+      "StatsService"
+    ],
+    "tag": "api"
+  },
+  "stats": {},
+  "policy": {
+    "levels": {
+      "0": {
+        "statsUserUplink": true,
+        "statsUserDownlink": true
+      }
+    },
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true,
+      "statsOutboundUplink": true,
+      "statsOutboundDownlink": true
+    }
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 62789,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      },
+      "tag": "api",
+      "sniffing": null
+    },
+    {
+      "tag": "Vless-TCP-XTLS",
+      "port": 443, // This is TLS entrypoint. This entrypoint does the SSL Termination then routes the request based on the Path or ALPN type.
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {  "email": "general@vless-tcp-xtls", //Change to your own email
+            "id": "4a97e71a-7747-4597-xxxx-e9d91f84d614", //Change to your own email
+            "flow": "xtls-rprx-vision",
+            "level": 0
+            // "flow": "xtls-rprx-direct"
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          // H2
+          // Websocket
+          {
+            // if the path was `/ssws`, pass it to port 4001 (shadowsocks-ws listener)
+            "path": "/ssws",
+            "dest": 4001
+          },
+          // TCP + http obfs
+          {
+            // if the path was `/vltc`, pass it to vless-tcp listener
+            "path": "/vltc",
+            "dest": "@vless-tcp",
+            "xver": 2
+          },
+          {
+            // if the request's ALPN was HTTP2, pass it to trojan-tcp. (Also from trojan-tcp fallback to Nginx HTTP2)
+            "alpn": "h2",
+            "dest": "/dev/shm/h2c.sock",
+            "xver": 2
+          },
+          {
+            "dest": "/dev/shm/h1.sock",
+            "xver": 2
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+	     {
+              "ocspStapling": 3600, 
+              "certificateFile": "/etc/ssl/xxxx.link.crt.cf", 
+              "keyFile": "/etc/ssl/xxxx.link.key.cf"
+            },
+	     {
+              "ocspStapling": 3600, 
+              "certificateFile": "/etc/ssl/xxxx.eu.org.crt.cf", 
+              "keyFile": "/etc/ssl/xxxx.eu.org.key.cf"
+            },
+	     {
+              "ocspStapling": 3600, 
+              "certificateFile": "/etc/nginx/conf.d/ssl/xxxx.xyz.crt", 
+              "keyFile": "/etc/nginx/conf.d/ssl/xxxx.xyz.key"
+            },
+	     {
+              "ocspStapling": 3600, 
+              "certificateFile": "/etc/nginx/conf.d/ssl/xxxx.link.crt", 
+              "keyFile": "/etc/nginx/conf.d/ssl/xxxx.link.key"
+            }
+          ],
+          "minVersion": "1.2", 
+          "cipherSuites": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", 
+          "alpn": [
+            "h2", 
+            "http/1.1" 
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                  WebSocket (VLESS - VMESS - TROJAN - ShadowSocks)                                  //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+      "tag": "shadowsocks-ws",
+      "listen": "127.0.0.1",
+      "port": 4001,
+      "protocol": "shadowsocks",
+      "settings": {
+        "email":"general@shadowsocks-ws",
+        "method": "chacha20-ietf-poly1305",
+        "password": "V2CHrZ7DV27YCG1zJgSb",
+        "level": 0
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/ssws"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                               TCP + http obfs (VLESS - VMESS - TROJAN - ShadowSocks)                               //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+      "listen": "@vless-tcp",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email":"general@vless-tcp",
+            "id": "4a97e71a-7747-4597-xxxx-e9d91f84d614",
+            "level": 0 
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none",
+        "tcpSettings": {
+          "acceptProxyProtocol": true,
+          "header": {
+            "type": "http",
+            "request": {
+              "path": [
+                "/vltc"
+              ]
+            }
+          }
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //        GRPC (VLESS - VMESS - TROJAN - SHADOWSOCKS) (Nginx routes to them based on `serviceName`(HTTP2 Path) )      //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+      "tag": "vless-grpc",
+      "listen": "127.0.0.1", // listen on localhost
+      "port": 3002,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email":"general@vless-grpc",
+            "id": "4a97e71a-7747-4597-xxxx-e9d91f84d614",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "wheregogrpc"
+        }
+      }
+    },
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     H2 (VLESS - VMESS - TROJAN - SHADOWSOCKS)                                   //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     {
+       "port": 80, // this is http entrypoint, uncomment to enable vless-ws, vless-tcp, vmess-ws, vmess-tcp, shadowwsocks-ws and shadowsocks-tcp on HTTP
+       "protocol": "vless",
+       "settings": {
+         "clients": [
+           {
+             "id": "4a97e71a-7747-4597-xxxx-e9d91f84d614"
+           }
+         ],
+         "fallbacks": [
+           {
+             "path": "/vltc",
+             "dest": "@vless-tcp",
+             "xver": 2
+           },
+           {
+             "dest": "/dev/shm/h1.sock", // defaults to Nginx HTTP1.1 listener
+             "xver": 2
+           },
+           {
+             "path": "/ssws",
+             "dest": 4001
+           }
+         ],
+         "decryption": "none"
+       },
+       "streamSettings": {
+         "network": "tcp",
+         "security": "none"
+       },
+       "sniffing": {
+         "enabled": true,
+         "destOverride": ["http", "tls"]
+       }
+     }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {}
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "blocked"
+    },
+    {
+      // A DNS Cache can be setup and added here to imporve performance (the corresponding rule should be uncommented)
+      "tag": "DNS-Internal",
+      "protocol": "dns",
+      "settings": {
+        "address": "127.0.0.53",
+        "port": 53
+      }
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "inboundTag": [
+          "api"
+        ],
+        "outboundTag": "api",
+        "type": "field"
+      },
+      // {
+      //   // DNS Cache rule
+      //   "type": "field",
+      //   "port": 53,
+      //   "network": "tcp,udp",
+      //   "outboundTag": "DNS-Internal"
+      // },
+      {
+        "type": "field",
+        "outboundTag": "blocked",
+        "ip": [
+          "geoip:private",
+          "geoip:cn"
+        ]
+      },
+      {
+        "type": "field", // Block BitTorrent protocol
+        "outboundTag": "blocked",
+        "protocol": [
+          "bittorrent"
+        ]
+      }
+    ]
+  }
+}
+
