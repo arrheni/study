@@ -1,0 +1,15 @@
+listen: :443 
+
+tls:
+  cert: /etc/ssl/.xyz.crt 
+  key: /etc/ssl/.xyz.key 
+
+auth:
+  type: password
+  password: ne
+
+masquerade: 
+  type: proxy
+  proxy:
+    url: https://.xyz 
+    rewriteHost: true

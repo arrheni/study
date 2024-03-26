@@ -1,0 +1,56 @@
+{
+  "log": {
+    "level": "info"
+  },
+  "dns": {
+    "servers": [
+      {
+        "address": "tls://8.8.8.8"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+	    "tag": "hy2",
+      "type": "hysteria2",
+      "listen": "::",
+      "listen_port": 8443,
+      "up_mbps": 1000,
+      "down_mbps": 1000,
+      "users": [
+        {
+          "name": "sekai",
+          "password": "jjj"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "weiway.xyz",
+        "key_path": "/etc/ssl/.xyz.key",
+        "certificate_path": "/etc/ssl/.xyz.crt"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "out"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "inbound": "hy2",
+        "outbound": "out"
+      },
+      {
+        "protocol": "dns",
+        "outbound": "dns-out"
+      }
+    ]
+  }
+}
